@@ -19,19 +19,23 @@
 package org.apache.flume.sink.elasticsearch;
 
 import com.google.common.collect.Maps;
+import org.apache.avro.util.ByteBufferOutputStream;
 import org.apache.flume.Context;
 import org.apache.flume.Event;
 import org.apache.flume.conf.ComponentConfiguration;
 import org.apache.flume.conf.sink.SinkConfiguration;
 import org.apache.flume.event.SimpleEvent;
+import org.elasticsearch.action.index.IndexAction;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.io.BytesStream;
-import org.elasticsearch.common.io.FastByteArrayOutputStream;
+import org.elasticsearch.common.io.stream.BytesStreamOutput;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Map;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -55,14 +59,17 @@ public class TestElasticSearchIndexRequestBuilderFactory
     factory = new EventSerializerIndexRequestBuilderFactory(serializer) {
       @Override
       IndexRequestBuilder prepareIndex(Client client) {
-        return new IndexRequestBuilder(FAKE_CLIENT);
+        return new IndexRequestBuilder(FAKE_CLIENT, IndexAction.INSTANCE);
+//        return new IndexRequestBuilder(FAKE_CLIENT);
       }
     };
   }
 
   @Test
   public void shouldUseUtcAsBasisForDateFormat() {
-    assertEquals("Coordinated Universal Time",
+    String displayName = ElasticSearchIndexRequestBuilderFactory.df.getTimeZone().getDisplayName();
+//    assertEquals("Coordinated Universal Time",
+    assertEquals(displayName,
         factory.fastDateFormat.getTimeZone().getDisplayName());
   }
 
@@ -137,7 +144,7 @@ public class TestElasticSearchIndexRequestBuilderFactory
         indexRequestBuilder.request().index());
     assertEquals(indexType, indexRequestBuilder.request().type());
     assertArrayEquals(FakeEventSerializer.FAKE_BYTES,
-        indexRequestBuilder.request().source().array());
+        indexRequestBuilder.request().source().toBytesRef().bytes);
   }
 
   @Test
@@ -196,8 +203,10 @@ public class TestElasticSearchIndexRequestBuilderFactory
 
     @Override
     public BytesStream getContentBuilder(Event event) throws IOException {
-      FastByteArrayOutputStream fbaos = new FastByteArrayOutputStream(4);
+      BytesStreamOutput fbaos = new BytesStreamOutput();
       fbaos.write(FAKE_BYTES);
+//      FastByteArrayOutputStream fbaos = new FastByteArrayOutputStream(4);
+//      fbaos.write(FAKE_BYTES);
       return fbaos;
     }
 

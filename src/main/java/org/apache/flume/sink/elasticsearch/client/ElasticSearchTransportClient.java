@@ -20,6 +20,7 @@ package org.apache.flume.sink.elasticsearch.client;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
+
 import org.apache.flume.Context;
 import org.apache.flume.Event;
 import org.apache.flume.EventDeliveryException;
@@ -30,15 +31,17 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.settings.ImmutableSettings;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.node.Node;
-import org.elasticsearch.node.NodeBuilder;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Arrays;
+
 import org.apache.flume.sink.elasticsearch.ElasticSearchIndexRequestBuilderFactory;
 
 import static org.apache.flume.sink.elasticsearch.ElasticSearchSinkConstants.DEFAULT_PORT;
@@ -67,7 +70,7 @@ public class ElasticSearchTransportClient implements ElasticSearchClient {
 
   /**
    * Transport client for external cluster
-   * 
+   *
    * @param hostNames
    * @param clusterName
    * @param serializer
@@ -85,17 +88,17 @@ public class ElasticSearchTransportClient implements ElasticSearchClient {
     this.indexRequestBuilderFactory = indexBuilder;
     openClient(clusterName);
   }
-  
+
   /**
    * Local transport client only for testing
-   * 
+   *
    * @param indexBuilderFactory
    */
   public ElasticSearchTransportClient(ElasticSearchIndexRequestBuilderFactory indexBuilderFactory) {
     this.indexRequestBuilderFactory = indexBuilderFactory;
     openLocalDiscoveryClient();
   }
-  
+
   /**
    * Local transport client only for testing
    *
@@ -138,10 +141,18 @@ public class ElasticSearchTransportClient implements ElasticSearchClient {
       String host = hostPort[0].trim();
       int port = hostPort.length == 2 ? Integer.parseInt(hostPort[1].trim())
               : DEFAULT_PORT;
-      serverAddresses[i] = new InetSocketTransportAddress(host, port);
+//      serverAddresses[i] = new InetSocketTransportAddress(host, port);
+        InetAddress addr;
+        try {
+            addr = InetAddress.getByName(host);
+        } catch (UnknownHostException e) {
+            logger.error("unknown host:{}", host, e);
+            continue;
+        }
+        serverAddresses[i] = new InetSocketTransportAddress(addr, port);
     }
   }
-  
+
   @Override
   public void close() {
     if (client != null) {
@@ -187,16 +198,20 @@ public class ElasticSearchTransportClient implements ElasticSearchClient {
 
   /**
    * Open client to elaticsearch cluster
-   * 
+   *
    * @param clusterName
    */
   private void openClient(String clusterName) {
     logger.info("Using ElasticSearch hostnames: {} ",
         Arrays.toString(serverAddresses));
-    Settings settings = ImmutableSettings.settingsBuilder()
+//    Settings settings = ImmutableSettings.settingsBuilder()
+    Settings settings = Settings.builder()
         .put("cluster.name", clusterName).build();
 
-    TransportClient transportClient = new TransportClient(settings);
+
+//    TransportClient transportClient = new TransportClient(settings);
+    TransportClient transportClient = new PreBuiltTransportClient(settings);
+
     for (InetSocketTransportAddress host : serverAddresses) {
       transportClient.addTransportAddress(host);
     }
@@ -208,13 +223,16 @@ public class ElasticSearchTransportClient implements ElasticSearchClient {
 
   /*
    * FOR TESTING ONLY...
-   * 
+   *
    * Opens a local discovery node for talking to an elasticsearch server running
    * in the same JVM
    */
   private void openLocalDiscoveryClient() {
     logger.info("Using ElasticSearch AutoDiscovery mode");
-    Node node = NodeBuilder.nodeBuilder().client(true).local(true).node();
+      Settings settings = Settings.builder().build();
+      Node node = new Node(settings);
+
+//    Node node = NodeBuilder.nodeBuilder().client(true).local(true).node();
     if (client != null) {
       client.close();
     }

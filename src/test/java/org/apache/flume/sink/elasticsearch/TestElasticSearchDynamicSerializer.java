@@ -18,10 +18,10 @@
  */
 package org.apache.flume.sink.elasticsearch;
 
+import com.google.common.collect.Maps;
 import org.apache.flume.Context;
 import org.apache.flume.Event;
 import org.apache.flume.event.EventBuilder;
-import org.elasticsearch.common.collect.Maps;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.junit.Test;
 
@@ -57,8 +57,8 @@ public class TestElasticSearchDynamicSerializer {
 
     XContentBuilder actual = fixture.getContentBuilder(event);
 
-    assertEquals(new String(expected.bytes().array()), new String(actual
-        .bytes().array()));
+    assertEquals(new String(expected.bytes().toBytesRef().bytes), new String(actual
+        .bytes().toBytesRef().bytes));
 
   }
 }

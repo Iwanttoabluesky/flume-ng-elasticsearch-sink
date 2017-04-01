@@ -25,11 +25,11 @@ import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import org.apache.flume.Context;
 import org.apache.flume.Event;
 import org.apache.flume.conf.ComponentConfiguration;
-import org.elasticsearch.common.collect.Maps;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 /**
@@ -78,6 +78,7 @@ public class ElasticSearchLogStashEventSerializer implements
     XContentBuilder builder = jsonBuilder().startObject();
     appendBody(builder, event);
     appendHeaders(builder, event);
+    builder.endObject();
     return builder;
   }
 

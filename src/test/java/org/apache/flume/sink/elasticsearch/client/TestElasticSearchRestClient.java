@@ -91,7 +91,8 @@ public class TestElasticSearchRestClient {
     BytesStream bytesStream = mock(BytesStream.class);
 
     when(nameBuilder.getIndexName(any(Event.class))).thenReturn(INDEX_NAME);
-    when(bytesReference.toBytesArray()).thenReturn(new BytesArray(MESSAGE_CONTENT));
+    when(bytesReference.utf8ToString()).thenReturn(MESSAGE_CONTENT);
+//    when(bytesReference.utf8ToString()).thenReturn(new BytesArray(MESSAGE_CONTENT).array());
     when(bytesStream.bytes()).thenReturn(bytesReference);
     when(serializer.getContentBuilder(any(Event.class))).thenReturn(bytesStream);
     fixture = new ElasticSearchRestClient(HOSTS, serializer, httpClient);

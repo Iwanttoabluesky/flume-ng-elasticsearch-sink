@@ -94,7 +94,7 @@ public class  ElasticSearchRestClient implements ElasticSearchClient {
   @Override
   public void addEvent(Event event, IndexNameBuilder indexNameBuilder, String indexType,
                        long ttlMs) throws Exception {
-    BytesReference content = serializer.getContentBuilder(event).bytes();
+    BytesReference content = serializer. getContentBuilder(event).bytes();
     Map<String, Map<String, String>> parameters = new HashMap<String, Map<String, String>>();
     Map<String, String> indexParameters = new HashMap<String, String>();
     indexParameters.put(INDEX_PARAM, indexNameBuilder.getIndexName(event));
@@ -108,7 +108,8 @@ public class  ElasticSearchRestClient implements ElasticSearchClient {
     synchronized (bulkBuilder) {
       bulkBuilder.append(gson.toJson(parameters));
       bulkBuilder.append("\n");
-      bulkBuilder.append(content.toBytesArray().toUtf8());
+      bulkBuilder.append(content.utf8ToString());
+//      bulkBuilder.append(content.toBytesArray().toUtf8());
       bulkBuilder.append("\n");
     }
   }

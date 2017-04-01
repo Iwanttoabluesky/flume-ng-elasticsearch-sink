@@ -69,7 +69,7 @@ public class TestElasticSearchTransportClient {
     BytesStream bytesStream = mock(BytesStream.class);
 
     when(nameBuilder.getIndexName(any(Event.class))).thenReturn("foo_index");
-    when(bytesReference.toBytes()).thenReturn("{\"body\":\"test\"}".getBytes());
+    when(bytesReference.utf8ToString()).thenReturn("{\"body\":\"test\"}");
     when(bytesStream.bytes()).thenReturn(bytesReference);
     when(serializer.getContentBuilder(any(Event.class)))
         .thenReturn(bytesStream);
